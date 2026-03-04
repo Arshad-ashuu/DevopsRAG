@@ -1,8 +1,3 @@
-Arshad, what you built here is a **compact RAG chatbot**: documents → embeddings → FAISS vector search → Gemini answer generation → Flask API → simple web UI.
-Below is a clean **README.md** suitable for GitHub.
-
----
-
 # 📚 DevOps Documentation Chatbot (RAG + Gemini + FAISS)
 
 A lightweight **AI-powered documentation chatbot** built using **Flask, LangChain, Google Gemini, and FAISS**.
@@ -15,6 +10,10 @@ Currently the chatbot indexes DevOps documentation such as:
 * CI/CD
 
 But it can be extended to **any domain knowledge base**.
+
+---
+
+![UI](image.png)
 
 ---
 
@@ -70,7 +69,7 @@ project/
 │
 ├── vector_store/             # Generated FAISS index
 │
-├── embed_docs.py             # Creates embeddings from docs
+├── embed_docs.py             # Creates embeddings from d
 ├── main.py                   # Flask RAG chatbot API
 ├── index.html                # Frontend chat UI
 ├── requirements.txt          # Python dependencies
@@ -122,16 +121,10 @@ Get an API key from:
 
 Then export it as an environment variable.
 
-Linux / Mac:
+ENV:
 
 ```bash
-export GEMINI_API_KEY="your_api_key_here"
-```
-
-Windows:
-
-```bash
-set GEMINI_API_KEY=your_api_key_here
+GEMINI_API_KEY="your_api_key_here"
 ```
 
 ---
@@ -201,219 +194,4 @@ Server runs at:
 http://localhost:5000
 ```
 
----
-
-# 💬 API Endpoint
-
-### POST `/chat`
-
-Request:
-
-```json
-{
-  "message": "What is Docker?",
-  "session_id": "user1"
-}
-```
-
-Response:
-
-```json
-{
-  "answer": "Docker is a containerization platform...",
-  "sources": ["docker.txt"]
-}
-```
-
----
-
-# 🧠 Key Components
-
-## FAISS Vector Database
-
-FAISS (Facebook AI Similarity Search) is used to store embeddings and retrieve the most relevant document chunks.
-
-Advantages:
-
-* Extremely fast similarity search
-* Works locally
-* Scales to millions of vectors
-
----
-
-## Gemini Embeddings
-
-Model used:
-
-```
-models/gemini-embedding-001
-```
-
-Purpose:
-
-Convert text chunks into numerical vectors representing semantic meaning.
-
-This allows the system to retrieve documents **by meaning rather than keyword match**.
-
----
-
-## Gemini Chat Model
-
-Model used:
-
-```
-gemini-2.5-flash
-```
-
-Characteristics:
-
-* Fast
-* Low cost
-* Strong reasoning
-* Good for RAG pipelines
-
----
-
-## History-Aware Retrieval
-
-The chatbot keeps **session chat history**.
-
-Example:
-
-User:
-
-```
-What is Docker?
-```
-
-Then:
-
-```
-How does it help DevOps?
-```
-
-The system reformulates the second question into something like:
-
-```
-How does Docker help DevOps?
-```
-
-This improves retrieval accuracy.
-
----
-
-# 📉 Free Tier Rate Limit Handling
-
-The embedding script processes documents in **small batches**.
-
-```
-BATCH_SIZE = 5
-sleep = 3 seconds
-```
-
-This avoids Gemini API errors like:
-
-```
-429 Rate Limit Exceeded
-```
-
----
-
-# 🔧 Configuration
-
-Important parameters in the code:
-
-### embed_docs.py
-
-```
-CHUNK_SIZE = 500
-CHUNK_OVERLAP = 100
-BATCH_SIZE = 5
-```
-
----
-
-### main.py
-
-```
-TOP_K = 4
-CHAT_MODEL = gemini-2.5-flash
-```
-
-Meaning:
-
-* Retrieve **top 4 document chunks**
-* Feed them to Gemini as context
-
----
-
-# 📌 Example Use Cases
-
-This architecture can be adapted for:
-
-• DevOps documentation chatbot
-• Internal company knowledge base
-• Technical interview assistant
-• Customer support bots
-• Personal knowledge assistant
-• Documentation search engine
-
----
-
-# 🔮 Future Improvements
-
-Possible upgrades:
-
-* Stream responses
-* Add PDF support
-* Add Markdown loader
-* Use Redis for persistent chat memory
-* Deploy with Docker
-* Deploy to AWS / GCP / Azure
-* Add authentication
-* Add multi-document search UI
-* Switch to hybrid search (BM25 + vector)
-
----
-
-# 🧪 Tech Stack
-
-Backend
-
-* Python
-* Flask
-* LangChain
-
-AI
-
-* Google Gemini
-* Gemini Embeddings
-
-Vector DB
-
-* FAISS
-
-Frontend
-
-* HTML
-* JavaScript
-
----
-
-# 🧑‍💻 Author
-
-Built as a **DevOps + AI learning project**.
-
-Demonstrates:
-
-* RAG architecture
-* LangChain pipelines
-* LLM integrations
-* Vector search systems
-
----
-
-If you want, I can also show you something **very useful for your DevOps career**:
-
-How to convert this project into a **production-grade syst
 
