@@ -1,0 +1,68 @@
+CI/CD stands for Continuous Integration and Continuous Delivery or Continuous Deployment. It is a set of practices used to automate the process of building, testing, and deploying software.
+
+Continuous Integration (CI)
+
+Developers frequently merge code changes into a shared repository. Automated builds and tests run to detect integration issues early.
+
+Continuous Delivery (CD)
+
+The application is automatically prepared for release after passing tests.
+
+Continuous Deployment
+
+Code changes are automatically deployed to production without manual approval.
+
+Typical CI/CD pipeline stages:
+
+Source stage
+Code stored in repositories such as GitHub or GitLab.
+
+Build stage
+Application is compiled or packaged.
+
+Test stage
+Automated tests verify functionality.
+
+Package stage
+Application artifacts or Docker images are created.
+
+Deploy stage
+Application is deployed to staging or production environments.
+
+Common CI/CD tools:
+
+Jenkins
+Open source automation server used to build pipelines.
+
+GitHub Actions
+CI/CD automation integrated into GitHub repositories.
+
+Azure DevOps Pipelines
+Microsoft’s cloud service for building and deploying applications.
+
+GitLab CI
+Integrated CI/CD pipelines within GitLab.
+
+Example CI/CD pipeline workflow:
+
+Developer pushes code to Git repository
+
+CI server detects the change
+
+Automated build process starts
+
+Unit tests run automatically
+
+Docker image is built
+
+Image pushed to container registry
+
+Application deployed to cloud infrastructure
+
+Benefits of CI/CD:
+
+Faster development cycles
+Reduced manual deployment errors
+Improved software quality through automated testing
+Consistent and repeatable deployments
+

@@ -1,0 +1,71 @@
+Docker is a containerization platform used to package applications and their dependencies into portable containers. Containers run consistently across different environments such as development, testing, and production.
+
+Key concepts:
+
+Image
+A read-only template used to create containers.
+
+Container
+A running instance of an image.
+
+Dockerfile
+A configuration file used to build Docker images.
+
+Registry
+A repository for storing Docker images, such as Docker Hub or Azure Container Registry.
+
+Basic workflow:
+
+Write application code
+
+Create a Dockerfile
+
+Build a Docker image
+
+Run the container
+
+Common commands:
+
+Build an image
+
+docker build -t myapp .
+
+Run a container
+
+docker run -p 5000:5000 myapp
+
+List running containers
+
+docker ps
+
+List all containers
+
+docker ps -a
+
+Stop a container
+
+docker stop <container_id>
+
+Remove a container
+
+docker rm <container_id>
+
+Remove an image
+
+docker rmi <image_id>
+
+View container logs
+
+docker logs <container_id>
+
+Common troubleshooting:
+
+Container exits immediately
+Check container logs using docker logs.
+
+Port not accessible
+Ensure correct port mapping using -p option.
+
+Image build fails
+Verify Dockerfile syntax and dependency installation.
+

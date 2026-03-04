@@ -1,0 +1,81 @@
+Linux is a widely used operating system for servers, cloud platforms, and infrastructure environments. System administrators often use command line tools to monitor system health and troubleshoot issues.
+
+Monitoring system resources:
+
+Check CPU usage
+
+top
+
+Interactive process viewer
+
+htop
+
+Check memory usage
+
+free -m
+
+Check disk space
+
+df -h
+
+Check disk usage by directory
+
+du -sh *
+
+Process management:
+
+List running processes
+
+ps aux
+
+Find process by name
+
+ps aux | grep nginx
+
+Kill a process
+
+kill -9 <process_id>
+
+Service management using systemd:
+
+Check service status
+
+systemctl status nginx
+
+Start a service
+
+systemctl start nginx
+
+Stop a service
+
+systemctl stop nginx
+
+Restart a service
+
+systemctl restart nginx
+
+Enable service at boot
+
+systemctl enable nginx
+
+Log monitoring:
+
+View system logs
+
+journalctl
+
+View logs for a specific service
+
+journalctl -u nginx
+
+Troubleshooting examples:
+
+High CPU usage
+Use top or htop to identify processes consuming CPU.
+
+Disk full errors
+Use df -h to check disk usage and clean unnecessary files.
+
+Service not responding
+Restart the service using systemctl restart.
+

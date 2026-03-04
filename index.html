@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>DevOps RAG Assistant</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg:        #0a0c0f;
+    --surface:   #10141a;
+    --border:    #1e2530;
+    --border-hi: #2e3d50;
+    --green:     #00e5a0;
+    --green-dim: #00b87a;
+    --cyan:      #38bdf8;
+    --amber:     #f59e0b;
+    --red:       #f87171;
+    --muted:     #4a5568;
+    --text:      #cdd6e3;
+    --text-hi:   #eef2f8;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    height: 100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    overflow: hidden;
+  }
+
+  /* ── Noise overlay ── */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 1000;
+    opacity: .5;
+  }
+
+  /* ── Layout ── */
+  .shell {
+    display: grid;
+    grid-template-rows: 48px 1fr 1px auto;
+    height: 100vh;
+  }
+
+  /* ── Top bar ── */
+  .topbar {
+    display: flex; align-items: center; gap: 12px;
+    padding: 0 20px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    position: relative;
+  }
+  .topbar-dots { display: flex; gap: 6px; }
+  .dot {
+    width: 10px; height: 10px; border-radius: 50%;
+    background: var(--border-hi);
+  }
+  .dot.r { background: #f87171; }
+  .dot.y { background: #fbbf24; }
+  .dot.g { background: #34d399; }
+
+  .topbar-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 13px; font-weight: 700;
+    color: var(--text-hi);
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    margin-left: 8px;
+  }
+  .topbar-tag {
+    margin-left: auto;
+    font-size: 10px; color: var(--muted);
+    border: 1px solid var(--border);
+    padding: 2px 8px; border-radius: 3px;
+    letter-spacing: .1em;
+  }
+  .status-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--green);
+    box-shadow: 0 0 8px var(--green);
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%,100% { opacity:1 } 50% { opacity:.4 } }
+
+  /* ── Messages area ── */
+  .messages {
+    overflow-y: auto;
+    padding: 24px 0;
+    scroll-behavior: smooth;
+  }
+  .messages::-webkit-scrollbar { width: 4px; }
+  .messages::-webkit-scrollbar-track { background: transparent; }
+  .messages::-webkit-scrollbar-thumb { background: var(--border-hi); border-radius: 4px; }
+
+  /* ── Message row ── */
+  .msg {
+    display: grid;
+    grid-template-columns: 60px 1fr;
+    gap: 0 16px;
+    padding: 10px 24px;
+    animation: fadeSlide .25s ease both;
+  }
+  @keyframes fadeSlide {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .msg-label {
+    font-size: 10px; font-weight: 600;
+    letter-spacing: .12em; text-transform: uppercase;
+    padding-top: 3px; text-align: right;
+    user-select: none;
+  }
+  .msg.user .msg-label  { color: var(--cyan); }
+  .msg.bot  .msg-label  { color: var(--green); }
+  .msg.err  .msg-label  { color: var(--red); }
+
+  .msg-body { line-height: 1.75; color: var(--text); }
+  .msg.user .msg-body { color: var(--text-hi); }
+
+  /* ── Sources badge strip ── */
+  .sources {
+    display: flex; flex-wrap: wrap; gap: 6px;
+    margin-top: 10px;
+  }
+  .src-badge {
+    font-size: 10px; letter-spacing: .08em;
+    padding: 2px 8px; border-radius: 3px;
+    border: 1px solid var(--green-dim);
+    color: var(--green);
+    background: rgba(0,229,160,.06);
+    cursor: pointer;
+    transition: background .15s;
+  }
+  .src-badge:hover { background: rgba(0,229,160,.14); }
+
+  /* ── Thinking indicator ── */
+  .thinking {
+    display: flex; gap: 5px; align-items: center;
+    padding-top: 4px;
+  }
+  .thinking span {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--green-dim);
+    animation: blink 1.2s ease-in-out infinite;
+  }
+  .thinking span:nth-child(2) { animation-delay: .2s; }
+  .thinking span:nth-child(3) { animation-delay: .4s; }
+  @keyframes blink { 0%,80%,100%{opacity:.2} 40%{opacity:1} }
+
+  /* ── Divider ── */
+  .divider { background: var(--border); height: 1px; }
+
+  /* ── Input bar ── */
+  .inputbar {
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px 24px;
+    background: var(--surface);
+  }
+
+  .prompt-prefix {
+    color: var(--green); font-size: 14px; font-weight: 600;
+    user-select: none; flex-shrink: 0;
+  }
+
+  #input {
+    flex: 1;
+    background: transparent;
+    border: none; outline: none;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px; color: var(--text-hi);
+    caret-color: var(--green);
+  }
+  #input::placeholder { color: var(--muted); }
+
+  .send-btn {
+    background: none;
+    border: 1px solid var(--border-hi);
+    color: var(--green);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; font-weight: 600;
+    letter-spacing: .1em;
+    padding: 6px 14px; border-radius: 4px;
+    cursor: pointer;
+    transition: border-color .15s, background .15s, color .15s;
+    text-transform: uppercase;
+  }
+  .send-btn:hover:not(:disabled) {
+    border-color: var(--green);
+    background: rgba(0,229,160,.08);
+  }
+  .send-btn:disabled { opacity: .4; cursor: not-allowed; }
+
+  /* ── Welcome state ── */
+  .welcome {
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    height: 100%;
+    gap: 12px;
+    user-select: none;
+  }
+  .welcome-logo {
+    font-family: 'Syne', sans-serif;
+    font-size: 40px; font-weight: 800;
+    color: var(--text-hi);
+    letter-spacing: -.02em;
+    line-height: 1;
+  }
+  .welcome-logo span { color: var(--green); }
+  .welcome-sub {
+    font-size: 11px; color: var(--muted);
+    letter-spacing: .12em; text-transform: uppercase;
+  }
+  .welcome-chips {
+    display: flex; flex-wrap: wrap; gap: 8px;
+    justify-content: center; margin-top: 8px;
+    max-width: 500px;
+  }
+  .chip {
+    border: 1px solid var(--border-hi);
+    padding: 6px 14px; border-radius: 4px;
+    font-size: 11px; color: var(--text);
+    cursor: pointer;
+    transition: border-color .15s, color .15s, background .15s;
+  }
+  .chip:hover {
+    border-color: var(--cyan);
+    color: var(--cyan);
+    background: rgba(56,189,248,.06);
+  }
+
+  /* ── Code blocks inside answers ── */
+  pre {
+    background: rgba(255,255,255,.04);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--green-dim);
+    border-radius: 4px;
+    padding: 12px;
+    margin: 8px 0;
+    overflow-x: auto;
+    font-size: 12px;
+    line-height: 1.6;
+  }
+  code { font-family: 'JetBrains Mono', monospace; }
+  p + p { margin-top: 8px; }
+</style>
+</head>
+<body>
+
+<div class="shell">
+
+  <!-- Top bar -->
+  <div class="topbar">
+    <div class="topbar-dots">
+      <div class="dot r"></div>
+      <div class="dot y"></div>
+      <div class="dot g"></div>
+    </div>
+    <div class="topbar-title">DevOps RAG Assistant</div>
+    <div class="status-dot" id="statusDot"></div>
+    <div class="topbar-tag">GEMINI · LANGCHAIN · RAG</div>
+  </div>
+
+  <!-- Messages -->
+  <div class="messages" id="messages">
+    <div class="welcome" id="welcome">
+      <div class="welcome-logo">DEV<span>OPS</span></div>
+      <div class="welcome-sub">Docs: docker · linux · ci/cd</div>
+      <div class="welcome-chips">
+        <div class="chip" onclick="suggest(this)">How do I write a Dockerfile?</div>
+        <div class="chip" onclick="suggest(this)">Explain CI/CD pipelines</div>
+        <div class="chip" onclick="suggest(this)">Common Linux commands</div>
+        <div class="chip" onclick="suggest(this)">Docker networking basics</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- Input bar -->
+  <div class="inputbar">
+    <span class="prompt-prefix">❯</span>
+    <input id="input" placeholder="Ask anything about Docker, Linux, or CI/CD …" autocomplete="off" />
+    <button class="send-btn" id="sendBtn" onclick="send()">Send</button>
+  </div>
+
+</div>
+
+<script>
+  const messagesEl = document.getElementById('messages');
+  const inputEl    = document.getElementById('input');
+  const sendBtn    = document.getElementById('sendBtn');
+  const welcome    = document.getElementById('welcome');
+
+  // Stable session ID for this browser tab
+  const SESSION_ID = 'sess_' + Math.random().toString(36).slice(2, 10);
+  let isThinking = false;
+
+  inputEl.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
+  });
+
+  function suggest(el) {
+    inputEl.value = el.textContent;
+    inputEl.focus();
+    send();
+  }
+
+  function hideWelcome() {
+    if (welcome) welcome.style.display = 'none';
+  }
+
+  function appendMsg(role, html, sources = []) {
+    hideWelcome();
+    const row = document.createElement('div');
+    row.className = `msg ${role}`;
+
+    const labels = { user: 'you', bot: 'rag', err: 'err' };
+    row.innerHTML = `
+      <div class="msg-label">${labels[role] || role}</div>
+      <div class="msg-body">
+        ${html}
+        ${sources.length ? `<div class="sources">${sources.map(s =>
+          `<span class="src-badge">📄 ${s}</span>`).join('')}</div>` : ''}
+      </div>`;
+    messagesEl.appendChild(row);
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+    return row;
+  }
+
+  function appendThinking() {
+    hideWelcome();
+    const row = document.createElement('div');
+    row.className = 'msg bot';
+    row.innerHTML = `
+      <div class="msg-label">rag</div>
+      <div class="msg-body">
+        <div class="thinking"><span></span><span></span><span></span></div>
+      </div>`;
+    messagesEl.appendChild(row);
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+    return row;
+  }
+
+  function formatAnswer(text) {
+    // Very light markdown: code blocks, inline code, newlines
+    text = text
+      .replace(/```[\w]*\n?([\s\S]*?)```/g, '<pre><code>$1</code></pre>')
+      .replace(/`([^`]+)`/g, '<code>$1</code>')
+      .replace(/\n{2,}/g, '</p><p>')
+      .replace(/\n/g, '<br/>');
+    return `<p>${text}</p>`;
+  }
+
+  async function send() {
+    const query = inputEl.value.trim();
+    if (!query || isThinking) return;
+
+    isThinking = true;
+    sendBtn.disabled = true;
+    inputEl.value = '';
+
+    appendMsg('user', escHtml(query));
+
+    const thinkRow = appendThinking();
+
+    try {
+      const res = await fetch('/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: query, session_id: SESSION_ID }),
+      });
+      const data = await res.json();
+
+      thinkRow.remove();
+
+      if (data.error) {
+        appendMsg('err', escHtml(data.error));
+      } else {
+        appendMsg('bot', formatAnswer(data.answer), data.sources || []);
+      }
+    } catch (err) {
+      thinkRow.remove();
+      appendMsg('err', 'Could not reach the server. Is main.py running?');
+    } finally {
+      isThinking = false;
+      sendBtn.disabled = false;
+      inputEl.focus();
+    }
+  }
+
+  function escHtml(s) {
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+</script>
+</body>
+</html>
+
+
