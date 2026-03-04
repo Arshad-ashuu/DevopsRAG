@@ -1,3 +1,5 @@
+![Portfolio](https://img.shields.io/badge/Portfolio-black)
+
 # 📚 DevOps Documentation Chatbot (RAG + Gemini + FAISS)
 
 A lightweight **AI-powered documentation chatbot** built using **Flask, LangChain, Google Gemini, and FAISS**.
